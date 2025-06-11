@@ -535,7 +535,9 @@
                         let chatHistory = [];
                         chatHistory.push({ role: "user", parts: [{ text: prompt }] });
                         const payload = { contents: chatHistory };
-                        const apiKey = "";
+                        // Këtu duhet të vendosni çelësin tuaj të API-së nga Google AI Studio
+                        // Shikoni udhëzimet se si ta gjeneroni çelësin tuaj
+                        const apiKey = "AIzaSyDC7JvGxpFQQ-_8uBiFhsF3th6owohAuIU"; // <--- VENDOSNI ÇELËSIN TUAJ TË API-së KËTU
                         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                         const response = await fetch(apiUrl, {
