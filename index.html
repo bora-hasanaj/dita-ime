@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Si Ishte Dita Ime? - Aplikacion Interaktiv</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tone.js është hequr pasi seksioni i këngës është hequr -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -91,7 +90,6 @@
             background-color: #D95F43;
             transform: translateY(-2px);
         }
-        /* Stilet për butonin e këngës janë hequr */
         #generate-storybook-btn { /* Style for the new storybook button */
             background-color: #9932CC; /* Purple */
             color: white;
@@ -106,6 +104,7 @@
             background-color: #6A057F; /* Darker Purple */
             transform: translateY(-2px);
         }
+        /* Stilet për butonin e mësimit të ditës janë hequr */
 
         .story-modal {
             display: none;
@@ -166,7 +165,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Kontrollet e këngës janë hequr */
     </style>
 </head>
 <body class="antialiased">
@@ -191,10 +189,10 @@
                         <p class="font-semibold mt-2">E gezuar</p>
                     </div>
                     <div class="emotion-cat flex flex-col items-center p-4 bg-gray-50 rounded-lg border-2 cursor-pointer" data-emotion="qete">
-                        <span class="text-4xl">😴</span>
+                        <span class="text-4xl">😼</span>
                         <p class="font-semibold mt-2">E Qetë</p>
                     </div>
-                    <div class="emotion-cat flex flex-col items-center p-4 bg-gray-50 rounded-lg border-2 cursor-pointer" data-emotion="vrenjtur">
+                    <div class="emotion-cat flex flex-col items-center p-4 bg-gray-50 rounded-lg border-2 cursor-pointer" data-emotion="merzitur">
                         <span class="text-4xl">😾</span>
                         <p class="font-semibold mt-2">E Merzitur</p>
                     </div>
@@ -351,6 +349,7 @@
             </section>
 
             <!-- Seksioni i Këngës Magjike është hequr plotësisht -->
+            <!-- Seksioni i Mësimit të Ditës është hequr plotësisht -->
 
             <!-- Seksioni i ri për Librin e Tregimit të Ditës -->
             <section class="card">
@@ -367,7 +366,6 @@
             <span class="close-button">&times;</span>
             <h3 id="modal-title" class="text-2xl font-bold text-[#D95F43] mb-4">Tregimi Magjik i Macës!</h3>
             <div id="loading-indicator" class="loading-spinner mb-4"></div>
-            <!-- Kontrollet e këngës janë hequr nga modali -->
             <p id="story-text" class="text-gray-700 text-lg whitespace-pre-wrap"></p>
         </div>
     </div>
@@ -376,23 +374,18 @@
         let selectedEmotion = 'lumtur'; // Emocioni i paracaktuar
         let selectedOptions = {};
         let currentDrawingColor = '#FF6347'; // Ngjyra e paracaktuar e vizatimit
-        // Variablat e lidhura me këngën janë hequr (currentSongLines, currentLineIndex, playbackInterval, playerSynth)
-
-        // Funksionet e lidhura me këngën janë hequr (initializeToneSynth, playSimpleMelody, startSongPlayback, pauseSongPlayback, stopSongPlayback)
-
-
+        
         document.addEventListener('DOMContentLoaded', () => {
             const emotionSelector = document.getElementById('emotion-selector');
             const cats = emotionSelector.querySelectorAll('.emotion-cat');
             const generateStoryButtons = document.querySelectorAll('.generate-story-btn');
-            // Butoni i gjenerimit të këngës është hequr
-            const generateStorybookButton = document.getElementById('generate-storybook-btn'); // Butoni i ri
+            const generateStorybookButton = document.getElementById('generate-storybook-btn');
+            // Butoni generateLessonButton është hequr nga deklarimi
             const storyModal = document.getElementById('story-modal');
             const closeModalBtn = document.querySelector('.close-button');
             const storyText = document.getElementById('story-text');
             const loadingIndicator = document.getElementById('loading-indicator');
             const modalTitle = document.getElementById('modal-title');
-            // Kontrollet e këngës janë hequr (songControls, playSongBtn, pauseSongBtn, stopSongBtn)
 
             // Aktivizo macen e parë të emocionit si të zgjedhur si parazgjedhje
             const firstEmotionCat = emotionSelector.querySelector('.emotion-cat');
@@ -400,10 +393,7 @@
                 firstEmotionCat.classList.add('selected');
                 selectedEmotion = firstEmotionCat.dataset.emotion;
             }
-
-            // Lidh dëgjuesit e ngjarjeve për kontrollet e këngës (këto janë hequr)
-
-
+            
             cats.forEach(cat => {
                 cat.addEventListener('click', () => {
                     cats.forEach(c => c.classList.remove('selected'));
@@ -680,7 +670,7 @@
                         loadingIndicator.style.display = 'none';
                     }
                 });
-            });
+        });
     </script>
 </body>
 </html>
