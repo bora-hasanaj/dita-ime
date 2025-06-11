@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Si Ishte Dita Ime? - Aplikacion Interaktiv</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FFF0E5;
+            color: #5C3A21;
+        }
+        h1, h2, h3 {
+            font-family: 'Gaegu', cursive;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 2px solid #FFDAB9;
+        }
+        .drawing-canvas {
+            border: 2px dashed #FFBFA0;
+            border-radius: 15px;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .emotion-cat {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .emotion-cat:hover {
+            transform: scale(1.05);
+        }
+        .emotion-cat.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 6px #FFA07A;
+            border-color: #FFA07A;
+        }
+        .color-button {
+            width: 32px; /* Zvogëlojmë madhësinë */
+            height: 32px; /* Zvogëlojmë madhësinë */
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            cursor: pointer;
+            transition: transform 0.1s ease-in-out, border-color 0.1s ease-in-out, box-shadow 0.1s ease-in-out; /* Shtojmë box-shadow në tranzicion */
+        }
+        .color-button:hover {
+            transform: scale(1.1);
+        }
+        .color-button.selected {
+            border-color: #D95F43;
+            transform: scale(1.15);
+            box-shadow: 0 0 0 3px #D95F43; /* Zvogëlojmë box-shadow për përshtatje me madhësinë */
+        }
+        .option-button {
+            background-color: #F8DCDC;
+            color: #D95F43;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+        .option-button:hover {
+            background-color: #FFC0B3;
+            transform: translateY(-2px);
+        }
+        .option-button.selected {
+            background-color: #D95F43;
+            color: white;
+            border-color: #FFA07A;
+            box-shadow: 0 0 0 4px #FFA07A, 0 0 0 8px rgba(255, 160, 122, 0.4);
+            transform: translateY(-2px);
+        }
+        .generate-story-btn {
+            background-color: #FFA07A;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.2s;
+            cursor: pointer;
+        }
+        .generate-story-btn:hover {
+            background-color: #D95F43;
+            transform: translateY(-2px);
+        }
+        .story-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .story-modal-content {
+            background-color: #FFFFFF;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #D95F43;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <main class="container mx-auto px-4 py-8 md:py-12 max-w-2xl">
+        <header class="text-center mb-10">
+            <h1 class="text-6xl md:text-7xl font-bold text-[#D95F43]">Si Ishte Dita Ime?</h1>
+            <p class="text-lg mt-2 text-gray-600">Përshëndetje! Më trego si kalove sot në kopsht duke klikuar dhe vizatuar!</p>
+        </header>
+
+        <div class="space-y-8">
+            <section class="card">
+                <h2 class="text-3xl font-bold text-center mb-4">Dita Ime Dukej Kështu!</h2>
+                <p class="text-center text-gray-500 mb-6">Zgjidh macen që tregon si u ndjeve sot.</p>
+                <div id="emotion-selector" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="emotion-cat flex flex-col items-center p-4 bg-gray-50 rounded-lg border-2 cursor-pointer" data-emotion="lumtur">
+                        <span class="text-4xl">😺</span>
+                        <p class="font-semibold mt-2">E Lumtur</p>
+                    </div>
+                    <div class="emotion-cat flex flex-col items-center p-4 bg-gray-50 rounded-lg border-2 cursor-pointer" data-emotion="qesharake">
+                        <span class="text-4xl">😹</span>
+                        <p class="font-semibold mt-2">E gezuar</p>
+                    </div>
+                    <div class="emotion-cat flex flex-col items-center p-4 bg-gray-50 rounded-lg border-2 cursor-pointer" data-emotion="qete">
+                        <span class="text-4xl">😴</span>
+                        <p class="font-semibold mt-2">E Qetë</p>
+                    </div>
+                    <div class="emotion-cat flex flex-col items-center p-4 bg-gray-50 rounded-lg border-2 cursor-pointer" data-emotion="vrenjtur">
+                        <span class="text-4xl">😾</span>
+                        <p class="font-semibold mt-2">E Merzitur</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3 class="text-3xl font-bold text-center mb-4">Sot, Luajta Me...</h3>
+                <p class="text-center text-gray-500 mb-4">Vizato ose zgjidh një opsion:</p>
+                <div id="options-play-canvas" class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="option-button" data-option="top">Top</button>
+                    <button class="option-button" data-option="kukull">Kukulla</button>
+                    <button class="option-button" data-option="makine">Makina</button>
+                    <button class="option-button" data-option="blloqe">Kuba/Lego</button>
+                    <button class="option-button" data-option="plasteline">Plasteline</button>
+                </div>
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-4">
+                    <div id="color-picker-play-canvas" class="flex md:flex-col gap-2 p-2 rounded-lg bg-gray-50">
+                        <button class="color-button selected" style="background-color: #FF6347;" data-color="#FF6347"></button>
+                        <button class="color-button" style="background-color: #FFA500;" data-color="#FFA500"></button>
+                        <button class="color-button" style="background-color: #FFD700;" data-color="#FFD700"></button>
+                        <button class="color-button" style="background-color: #32CD32;" data-color="#32CD32"></button>
+                        <button class="color-button" style="background-color: #1E90FF;" data-color="#1E90FF"></button>
+                        <button class="color-button" style="background-color: #9932CC;" data-color="#9932CC"></button>
+                        <button class="color-button" style="background-color: #FF69B4;" data-color="#FF69B4"></button>
+                    </div>
+                    <canvas id="play-canvas" class="drawing-canvas w-full h-64 bg-white flex-grow"></canvas>
+                </div>
+                <button class="generate-story-btn mt-4 w-full bg-[#FFA07A] text-white py-2 rounded-lg font-bold hover:bg-[#D95F43] transition-colors" data-canvas-id="play-canvas" data-context="luajta">✨ Krijoni një Tregim!</button>
+            </section>
+
+            <section class="card">
+                <h3 class="text-3xl font-bold text-center mb-4">Pjesa Ime e Preferuar...</h3>
+                <p class="text-center text-gray-500 mb-4">Vizato ose zgjidh një opsion:</p>
+                <div id="options-favorite-part-canvas" class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="option-button" data-option="gjumi">Gjumi</button>
+                    <button class="option-button" data-option="mensa">Mensa</button>
+                    <button class="option-button" data-option="gjimnastika">Gjimnastika</button>
+                    <button class="option-button" data-option="kenga">Kënga</button>
+                    <button class="option-button" data-option="baleti">Baleti</button>
+                    <button class="option-button" data-option="piktura">Piktura</button>
+                    <button class="option-button" data-option="rreshqitesja">Rrëshqitësja</button>
+                </div>
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-4">
+                    <div id="color-picker-favorite-part-canvas" class="flex md:flex-col gap-2 p-2 rounded-lg bg-gray-50">
+                        <button class="color-button selected" style="background-color: #FF6347;" data-color="#FF6347"></button>
+                        <button class="color-button" style="background-color: #FFA500;" data-color="#FFA500"></button>
+                        <button class="color-button" style="background-color: #FFD700;" data-color="#FFD700"></button>
+                        <button class="color-button" style="background-color: #32CD32;" data-color="#32CD32"></button>
+                        <button class="color-button" style="background-color: #1E90FF;" data-color="#1E90FF"></button>
+                        <button class="color-button" style="background-color: #9932CC;" data-color="#9932CC"></button>
+                        <button class="color-button" style="background-color: #FF69B4;" data-color="#FF69B4"></button>
+                    </div>
+                    <canvas id="favorite-part-canvas" class="drawing-canvas w-full h-64 bg-white flex-grow"></canvas>
+                </div>
+                <button class="generate-story-btn mt-4 w-full bg-[#FFA07A] text-white py-2 rounded-lg font-bold hover:bg-[#D95F43] transition-colors" data-canvas-id="favorite-part-canvas" data-context="preferuar">✨ Krijoni një Tregim!</button>
+            </section>
+
+            <section class="card">
+                <h3 class="text-3xl font-bold text-center mb-4">Ajo Çfarë Hëngra Për Dreka Ishte...</h3>
+                <p class="text-center text-gray-500 mb-4">Vizato ose zgjidh një opsion:</p>
+                <div id="options-food-canvas" class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="option-button" data-option="pilaf">Pilaf</button>
+                    <button class="option-button" data-option="makarona">Makarona</button>
+                    <button class="option-button" data-option="supe">Supë</button>
+                    <button class="option-button" data-option="perime">Perime</button>
+                    <button class="option-button" data-option="fruta">Fruta</button>
+                </div>
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-4">
+                    <div id="color-picker-food-canvas" class="flex md:flex-col gap-2 p-2 rounded-lg bg-gray-50">
+                        <button class="color-button selected" style="background-color: #FF6347;" data-color="#FF6347"></button>
+                        <button class="color-button" style="background-color: #FFA500;" data-color="#FFA500"></button>
+                        <button class="color-button" style="background-color: #FFD700;" data-color="#FFD700"></button>
+                        <button class="color-button" style="background-color: #32CD32;" data-color="#32CD32"></button>
+                        <button class="color-button" style="background-color: #1E90FF;" data-color="#1E90FF"></button>
+                        <button class="color-button" style="background-color: #9932CC;" data-color="#9932CC"></button>
+                        <button class="color-button" style="background-color: #FF69B4;" data-color="#FF69B4"></button>
+                    </div>
+                    <canvas id="food-canvas" class="drawing-canvas w-full h-64 bg-white flex-grow"></canvas>
+                </div>
+                <button class="generate-story-btn mt-4 w-full bg-[#FFA07A] text-white py-2 rounded-lg font-bold hover:bg-[#D95F43] transition-colors" data-canvas-id="food-canvas" data-context="dreka">✨ Krijoni një Tregim!</button>
+            </section>
+
+            <section class="card">
+                <h3 class="text-3xl font-bold text-center mb-4">Një Gjë e Re Që Mësova Sot Ishte...</h3>
+                <p class="text-center text-gray-500 mb-4">Vizato ose zgjidh një opsion:</p>
+                <div id="options-learned-canvas" class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="option-button" data-option="numra">Numra</button>
+                    <button class="option-button" data-option="shkronja">Shkronja</button>
+                    <button class="option-button" data-option="kenga e re">Këngë e re</button>
+                    <button class="option-button" data-option="vizatim">Vizatim</button>
+                </div>
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-4">
+                    <div id="color-picker-learned-canvas" class="flex md:flex-col gap-2 p-2 rounded-lg bg-gray-50">
+                        <button class="color-button selected" style="background-color: #FF6347;" data-color="#FF6347"></button>
+                        <button class="color-button" style="background-color: #FFA500;" data-color="#FFA500"></button>
+                        <button class="color-button" style="background-color: #FFD700;" data-color="#FFD700"></button>
+                        <button class="color-button" style="background-color: #32CD32;" data-color="#32CD32"></button>
+                        <button class="color-button" style="background-color: #1E90FF;" data-color="#1E90FF"></button>
+                        <button class="color-button" style="background-color: #9932CC;" data-color="#9932CC"></button>
+                        <button class="color-button" style="background-color: #FF69B4;" data-color="#FF69B4"></button>
+                    </div>
+                    <canvas id="learned-canvas" class="drawing-canvas w-full h-64 bg-white flex-grow"></canvas>
+                </div>
+                <button class="generate-story-btn mt-4 w-full bg-[#FFA07A] text-white py-2 rounded-lg font-bold hover:bg-[#D95F43] transition-colors" data-canvas-id="learned-canvas" data-context="mesova">✨ Krijoni një Tregim!</button>
+            </section>
+
+            <section class="card">
+                <h3 class="text-3xl font-bold text-center mb-4">Nesër, Shpresoj Të...</h3>
+                <p class="text-center text-gray-500 mb-4">Vizato ose zgjidh një opsion:</p>
+                <div id="options-tomorrow-canvas" class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="option-button" data-option="park">Park</button>
+                    <button class="option-button" data-option="biblioteke">Bibliotekë</button>
+                    <button class="option-button" data-option="gjyshja">Vizitë te gjyshja</button>
+                    <button class="option-button" data-option="loje me shoket">Lojë me shokët</button>
+                </div>
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-4">
+                    <div id="color-picker-tomorrow-canvas" class="flex md:flex-col gap-2 p-2 rounded-lg bg-gray-50">
+                        <button class="color-button selected" style="background-color: #FF6347;" data-color="#FF6347"></button>
+                        <button class="color-button" style="background-color: #FFA500;" data-color="#FFA500"></button>
+                        <button class="color-button" style="background-color: #FFD700;" data-color="#FFD700"></button>
+                        <button class="color-button" style="background-color: #32CD32;" data-color="#32CD32"></button>
+                        <button class="color-button" style="background-color: #1E90FF;" data-color="#1E90FF"></button>
+                        <button class="color-button" style="background-color: #9932CC;" data-color="#9932CC"></button>
+                        <button class="color-button" style="background-color: #FF69B4;" data-color="#FF69B4"></button>
+                    </div>
+                    <canvas id="tomorrow-canvas" class="drawing-canvas w-full h-64 bg-white flex-grow"></canvas>
+                </div>
+                <button class="generate-story-btn mt-4 w-full bg-[#FFA07A] text-white py-2 rounded-lg font-bold hover:bg-[#D95F43] transition-colors" data-canvas-id="tomorrow-canvas" data-context="neser">✨ Krijoni një Tregim!</button>
+            </section>
+            
+            <section class="card">
+                <h3 class="text-3xl font-bold text-center mb-4">Macja Ime e Preferuar!</h3>
+                <p class="text-center text-gray-500 mb-4">Vizato ose zgjidh një opsion:</p>
+                <div id="options-favorite-cat-canvas" class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button class="option-button" data-option="macja e zeze">Macja e zezë</button>
+                    <button class="option-button" data-option="macja e roze">Macja e rozë</button>
+                    <button class="option-button" data-option="macja me vija">Macja me vija</button>
+                    <button class="option-button" data-option="macja e bardhe">Macja e bardhë</button>
+                </div>
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-4">
+                    <div id="color-picker-favorite-cat-canvas" class="flex md:flex-col gap-2 p-2 rounded-lg bg-gray-50">
+                        <button class="color-button selected" style="background-color: #FF6347;" data-color="#FF6347"></button>
+                        <button class="color-button" style="background-color: #FFA500;" data-color="#FFA500"></button>
+                        <button class="color-button" style="background-color: #FFD700;" data-color="#FFD700"></button>
+                        <button class="color-button" style="background-color: #32CD32;" data-color="#32CD32"></button>
+                        <button class="color-button" style="background-color: #1E90FF;" data-color="#1E90FF"></button>
+                        <button class="color-button" style="background-color: #9932CC;" data-color="#9932CC"></button>
+                        <button class="color-button" style="background-color: #FF69B4;" data-color="#FF69B4"></button>
+                    </div>
+                    <canvas id="favorite-cat-canvas" class="drawing-canvas w-full h-64 bg-white flex-grow"></canvas>
+                </div>
+                <button class="generate-story-btn mt-4 w-full bg-[#FFA07A] text-white py-2 rounded-lg font-bold hover:bg-[#D95F43] transition-colors" data-canvas-id="favorite-cat-canvas" data-context="macja preferuar">✨ Krijoni një Tregim!</button>
+            </section>
+
+        </div>
+    </main>
+
+    <div id="story-modal" class="story-modal">
+        <div class="story-modal-content">
+            <span class="close-button">&times;</span>
+            <h3 class="text-2xl font-bold text-[#D95F43] mb-4">Tregimi Magjik i Macës!</h3>
+            <div id="loading-indicator" class="loading-spinner mb-4"></div>
+            <p id="story-text" class="text-gray-700 text-lg"></p>
+        </div>
+    </div>
+
+    <script>
+        let selectedEmotion = 'neutrale';
+        let selectedOptions = {};
+        let currentDrawingColor = '#FF6347'; // Ngjyra e paracaktuar e vizatimit
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const emotionSelector = document.getElementById('emotion-selector');
+            const cats = emotionSelector.querySelectorAll('.emotion-cat');
+            const generateStoryButtons = document.querySelectorAll('.generate-story-btn');
+            const storyModal = document.getElementById('story-modal');
+            const closeModalBtn = document.querySelector('.close-button');
+            const storyText = document.getElementById('story-text');
+            const loadingIndicator = document.getElementById('loading-indicator');
+
+            cats.forEach(cat => {
+                cat.addEventListener('click', () => {
+                    cats.forEach(c => c.classList.remove('selected'));
+                    cat.classList.add('selected');
+                    selectedEmotion = cat.dataset.emotion;
+                });
+            });
+            
+            const setupCanvas = (canvasId) => {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                let isDrawing = false;
+                let lastX = 0;
+                let lastY = 0;
+
+                const resizeCanvas = () => {
+                    const rect = canvas.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                };
+
+                const getEventPosition = (event) => {
+                    const rect = canvas.getBoundingClientRect();
+                    if (event.touches && event.touches.length > 0) {
+                        return { x: event.touches[0].clientX - rect.left, y: event.touches[0].clientY - rect.top };
+                    }
+                    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+                };
+
+                const startDrawing = (e) => {
+                    e.preventDefault();
+                    isDrawing = true;
+                    const pos = getEventPosition(e);
+                    [lastX, lastY] = [pos.x, pos.y];
+                };
+
+                const draw = (e) => {
+                    if (!isDrawing) return;
+                    e.preventDefault();
+                    const pos = getEventPosition(e);
+                    ctx.beginPath();
+                    ctx.moveTo(lastX, lastY);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.strokeStyle = currentDrawingColor;
+                    ctx.lineWidth = 5;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
+                    [lastX, lastY] = [pos.x, pos.y];
+                };
+
+                const stopDrawing = () => {
+                    isDrawing = false;
+                };
+                
+                canvas.addEventListener('mousedown', startDrawing);
+                canvas.addEventListener('mousemove', draw);
+                canvas.addEventListener('mouseup', stopDrawing);
+                canvas.addEventListener('mouseout', stopDrawing);
+                
+                canvas.addEventListener('touchstart', startDrawing);
+                canvas.addEventListener('touchmove', draw);
+                canvas.addEventListener('touchend', stopDrawing);
+
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
+            };
+
+            ['play-canvas', 'favorite-part-canvas', 'food-canvas', 'learned-canvas', 'tomorrow-canvas', 'favorite-cat-canvas'].forEach(setupCanvas);
+
+            const setupOptions = (optionsContainerId, canvasId) => {
+                const container = document.getElementById(optionsContainerId);
+                if (!container) return;
+                const buttons = container.querySelectorAll('.option-button');
+
+                buttons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        buttons.forEach(b => b.classList.remove('selected'));
+                        button.classList.add('selected');
+                        selectedOptions[canvasId] = button.dataset.option;
+                        const canvas = document.getElementById(canvasId);
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    });
+                });
+            };
+
+            setupOptions('options-play-canvas', 'play-canvas');
+            setupOptions('options-favorite-part-canvas', 'favorite-part-canvas');
+            setupOptions('options-food-canvas', 'food-canvas');
+            setupOptions('options-learned-canvas', 'learned-canvas');
+            setupOptions('options-tomorrow-canvas', 'tomorrow-canvas');
+            setupOptions('options-favorite-cat-canvas', 'favorite-cat-canvas');
+
+            const setupColorPicker = (colorPickerId) => {
+                const colorPicker = document.getElementById(colorPickerId);
+                if (!colorPicker) return;
+                const colorButtons = colorPicker.querySelectorAll('.color-button');
+
+                // Vendos ngjyrën e paracaktuar të vizatimit si të zgjedhurën fillimisht
+                const defaultColorButton = colorPicker.querySelector(`[data-color="${currentDrawingColor}"]`);
+                if (defaultColorButton) {
+                    defaultColorButton.classList.add('selected');
+                } else {
+                    colorButtons[0].classList.add('selected'); // Zgjidh të parën nëse default s'gjendet
+                    currentDrawingColor = colorButtons[0].dataset.color;
+                }
+
+                colorButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        colorButtons.forEach(b => b.classList.remove('selected'));
+                        button.classList.add('selected');
+                        currentDrawingColor = button.dataset.color;
+                    });
+                });
+            };
+
+            setupColorPicker('color-picker-play-canvas');
+            setupColorPicker('color-picker-favorite-part-canvas');
+            setupColorPicker('color-picker-food-canvas');
+            setupColorPicker('color-picker-learned-canvas');
+            setupColorPicker('color-picker-tomorrow-canvas');
+            setupColorPicker('color-picker-favorite-cat-canvas');
+
+
+            closeModalBtn.addEventListener('click', () => {
+                storyModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === storyModal) {
+                    storyModal.style.display = 'none';
+                }
+            });
+
+            generateStoryButtons.forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const context = e.target.dataset.context;
+                    const canvasId = e.target.dataset.canvasId;
+                    const specificOption = selectedOptions[canvasId] || '';
+                    
+                    storyText.textContent = '';
+                    loadingIndicator.style.display = 'block';
+                    storyModal.style.display = 'flex';
+
+                    let prompt = '';
+                    let additionalContext = specificOption ? `Ajo zgjodhi opsionin: ${specificOption}.` : `bazuar në vizatimin e saj.`;
+
+                    switch(context) {
+                        case 'luajta':
+                            prompt = `Krijoni një tregim të shkurtër, të thjeshtë dhe të gëzuar për një mace që luan, bazuar në ndjenjën e fëmijës: ${selectedEmotion} dhe ${additionalContext}. Tregimi duhet të jetë në shqip dhe i përshtatshëm për një fëmijë 3-vjeçar.`;
+                            break;
+                        case 'preferuar':
+                            prompt = `Krijoni një tregim të shkurtër, të thjeshtë dhe të gëzuar për një mace që bën gjënë e saj të preferuar, bazuar në ndjenjën e fëmijës: ${selectedEmotion} dhe ${additionalContext}. Tregimi duhet të jetë në shqip dhe i përshtatshëm për një fëmijë 3-vjeçar.`;
+                            break;
+                        case 'dreka':
+                            prompt = `Krijoni një tregim të shkurtër, të thjeshtë dhe të gëzuar për një mace që ha drekën, bazuar në ndjenjën e fëmijës: ${selectedEmotion} dhe ${additionalContext}. Tregimi duhet të jetë në shqip dhe i përshtatshëm për një fëmijë 3-vjeçar.`;
+                            break;
+                        case 'mesova':
+                            prompt = `Krijoni një tregim të shkurtër, të thjeshtë dhe të gëzuar për një mace që mëson diçka të re, bazuar në ndjenjën e fëmijës: ${selectedEmotion} dhe ${additionalContext}. Tregimi duhet të jetë në shqip dhe i përshtatshëm për një fëmijë 3-vjeçar.`;
+                            break;
+                        case 'neser':
+                            prompt = `Krijoni një tregim të shkurtër, të thjeshtë dhe të gëzuar për një mace që pret të bëjë diçka të bukur nesër, bazuar në ndjenjën e fëmijës: ${selectedEmotion} dhe ${additionalContext}. Tregimi duhet të jetë në shqip dhe i përshtatshëm për një fëmijë 3-vjeçar.`;
+                            break;
+                        case 'macja preferuar':
+                            prompt = `Krijoni një tregim të shkurtër, të thjeshtë dhe të gëzuar për macen e preferuar të një fëmije, bazuar në ndjenjën e fëmijës: ${selectedEmotion} dhe ${additionalContext}. Tregimi duhet të jetë në shqip dhe i përshtatshëm për një fëmijë 3-vjeçar.`;
+                            break;
+                        default:
+                            prompt = `Krijoni një tregim të shkurtër dhe të thjeshtë me mace. Tregimi duhet të jetë në shqip dhe i përshtatshëm për një fëmijë 3-vjeçar.`;
+                    }
+
+                    try {
+                        let chatHistory = [];
+                        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                        const payload = { contents: chatHistory };
+                        const apiKey = "";
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                        const response = await fetch(apiUrl, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(payload)
+                                });
+                        const result = await response.json();
+
+                        if (result.candidates && result.candidates.length > 0 &&
+                            result.candidates[0].content && result.candidates[0].content.parts &&
+                            result.candidates[0].content.parts.length > 0) {
+                            const text = result.candidates[0].content.parts[0].text;
+                            storyText.textContent = text;
+                        } else {
+                            storyText.textContent = "Diçka shkoi keq. Nuk mund të gjenerohet tregimi.";
+                        }
+                    } catch (error) {
+                        storyText.textContent = "Ndodhi një gabim: " + error.message;
+                        console.error("Gabim në gjenerimin e tregimit:", error);
+                    } finally {
+                        loadingIndicator.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
